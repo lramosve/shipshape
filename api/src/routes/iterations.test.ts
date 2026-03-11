@@ -55,11 +55,11 @@ describe('Iterations API', () => {
 
       vi.mocked(pool.query)
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+        .mockResolvedValueOnce({ rows: [{ id: sprintId }] })
         // Insert iteration
-        .mockResolvedValueOnce({ rows: [mockIteration] } as any)
+        .mockResolvedValueOnce({ rows: [mockIteration] })
         // Get author
-        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] } as any);
+        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] });
 
       const res = await request(app)
         .post(`/api/weeks/${sprintId}/iterations`)
@@ -102,7 +102,7 @@ describe('Iterations API', () => {
     it('returns 404 for non-existent sprint', async () => {
       vi.mocked(pool.query)
         // Sprint check - not found
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app)
         .post('/api/weeks/nonexistent/iterations')
@@ -122,7 +122,7 @@ describe('Iterations API', () => {
 
       vi.mocked(pool.query)
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+        .mockResolvedValueOnce({ rows: [{ id: sprintId }] })
         // Get iterations
         .mockResolvedValueOnce({
           rows: [
@@ -141,7 +141,7 @@ describe('Iterations API', () => {
               updated_at: new Date(),
             },
           ],
-        } as any);
+        });
 
       const res = await request(app)
         .get(`/api/weeks/${sprintId}/iterations`);
@@ -155,7 +155,7 @@ describe('Iterations API', () => {
     it('returns 404 for non-existent sprint', async () => {
       vi.mocked(pool.query)
         // Sprint check - not found
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app)
         .get('/api/weeks/nonexistent/iterations');
@@ -167,9 +167,9 @@ describe('Iterations API', () => {
     it('filters by status', async () => {
       vi.mocked(pool.query)
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] } as any)
+        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] })
         // Get iterations - should have status filter applied
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app)
         .get('/api/weeks/sprint-123/iterations?status=fail');

@@ -69,7 +69,7 @@ describe('Projects API', () => {
         },
       ];
 
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: mockProjects } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: mockProjects });
 
       const res = await request(app).get('/api/projects');
 
@@ -88,7 +88,7 @@ describe('Projects API', () => {
     });
 
     it('returns projects sorted by ice_score descending by default', async () => {
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       await request(app).get('/api/projects');
 
@@ -102,7 +102,7 @@ describe('Projects API', () => {
     });
 
     it('sorts by ice_score ascending when dir=asc', async () => {
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       await request(app).get('/api/projects?sort=ice_score&dir=asc');
 
@@ -130,7 +130,7 @@ describe('Projects API', () => {
       };
 
       vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+        .mockResolvedValueOnce({ rows: [mockProject] });
 
       const res = await request(app)
         .post('/api/projects')
@@ -159,9 +159,9 @@ describe('Projects API', () => {
 
       vi.mocked(pool.query)
         // Insert query
-        .mockResolvedValueOnce({ rows: [mockProject] } as any)
+        .mockResolvedValueOnce({ rows: [mockProject] })
         // Get user info
-        .mockResolvedValueOnce({ rows: [{ id: ownerId, name: 'Test Owner', email: 'owner@example.com' }] } as any);
+        .mockResolvedValueOnce({ rows: [{ id: ownerId, name: 'Test Owner', email: 'owner@example.com' }] });
 
       const res = await request(app)
         .post('/api/projects')
@@ -193,7 +193,7 @@ describe('Projects API', () => {
       };
 
       vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+        .mockResolvedValueOnce({ rows: [mockProject] });
 
       const res = await request(app)
         .post('/api/projects')
@@ -236,7 +236,7 @@ describe('Projects API', () => {
         issue_count: '10',
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [mockProject] } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [mockProject] });
 
       const res = await request(app).get('/api/projects/project-123');
 
@@ -246,7 +246,7 @@ describe('Projects API', () => {
     });
 
     it('returns 404 for non-existent project', async () => {
-            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app).get('/api/projects/nonexistent');
 
@@ -278,11 +278,11 @@ describe('Projects API', () => {
 
       vi.mocked(pool.query)
         // Check existing
-        .mockResolvedValueOnce({ rows: [existingProject] } as any)
+        .mockResolvedValueOnce({ rows: [existingProject] })
         // Update
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         // Re-query
-        .mockResolvedValueOnce({ rows: [updatedProject] } as any);
+        .mockResolvedValueOnce({ rows: [updatedProject] });
 
       const res = await request(app)
         .patch('/api/projects/project-123')
@@ -295,7 +295,7 @@ describe('Projects API', () => {
     });
 
     it('returns 404 for non-existent project', async () => {
-            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app)
         .patch('/api/projects/nonexistent')
@@ -310,11 +310,11 @@ describe('Projects API', () => {
     it('deletes project and removes references', async () => {
       vi.mocked(pool.query)
         // Access check
-        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] } as any)
+        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] })
         // Remove project_id from children
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         // Delete project
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app).delete('/api/projects/project-123');
 
@@ -322,7 +322,7 @@ describe('Projects API', () => {
     });
 
     it('returns 404 for non-existent project', async () => {
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       const res = await request(app).delete('/api/projects/nonexistent');
 

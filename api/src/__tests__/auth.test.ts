@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { mockQueryResult } from '../test/mock-helpers.js';
 
 // Mock pool before importing auth middleware
 vi.mock('../db/client.js', () => ({
@@ -45,7 +46,8 @@ describe('authMiddleware', () => {
 
     it('returns 401 when session does not exist in database', async () => {
       const { req, res, next } = createMockReqRes({ session_id: 'invalid-session' });
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [], rowCount: 0 } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(mockQueryResult([]));
+
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(
@@ -69,9 +71,9 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(req.sessionId).toBe('valid-session');
@@ -95,7 +97,7 @@ describe('authMiddleware', () => {
           created_at: now,
           is_super_admin: false,
         }],
-      } as any);
+      });
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -121,7 +123,7 @@ describe('authMiddleware', () => {
           created_at: oldCreatedAt,
           is_super_admin: false,
         }],
-      } as any);
+      });
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -148,8 +150,8 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(pool.query).toHaveBeenCalledWith(
@@ -173,8 +175,8 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
@@ -200,8 +202,8 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: true,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(req.isSuperAdmin).toBe(true);
@@ -239,9 +241,9 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(res.cookie).toHaveBeenCalledWith('session_id', 'valid-session', {
@@ -269,9 +271,9 @@ describe('authMiddleware', () => {
             created_at: now,
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(res.cookie).not.toHaveBeenCalled();
@@ -306,9 +308,9 @@ describe('authMiddleware', () => {
             workspace_id: 'ws-123',
             is_super_admin: false,
           }],
-        } as any)
+        })
         // Mock update last_used_at
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(req.userId).toBe('user-123');
@@ -321,7 +323,7 @@ describe('authMiddleware', () => {
       const { req, res, next } = createMockReqResWithAuth('Bearer invalid_token');
 
       // Mock token not found
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -337,7 +339,7 @@ describe('authMiddleware', () => {
       const { req, res, next } = createMockReqResWithAuth('Bearer ship_revokedtoken');
 
       // Mock token found but revoked (revoked_at is set)
-      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any); // No results means revoked/expired
+      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] }); // No results means revoked/expired
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -365,8 +367,8 @@ describe('authMiddleware', () => {
             workspace_id: 'api-ws',
             is_super_admin: false,
           }],
-        } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        })
+        .mockResolvedValueOnce({ rows: [] });
 
       await authMiddleware(req, res, next);
       // Should use token auth, not session
