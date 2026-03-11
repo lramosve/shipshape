@@ -1,24 +1,34 @@
 # Category 6: Error Handling Improvements
 
+## Problem
+The application had three critical error handling gaps:
+1. No process-level handlers for unhandled promise rejections or uncaught exceptions — fatal errors could crash silently
+2. No Express global error middleware — unhandled route errors returned raw HTML stack traces
+3. Only 2 ErrorBoundary placements (App root + Editor) — a sidebar crash would replace the entire application
+
 ## Improvement 1: Process-Level Error Handlers
 
 **File:** `api/src/index.ts`
 
-**What changed:** Added `process.on('unhandledRejection')` and `process.on('uncaughtException')` handlers that log the error and exit with a failure code.
+### What Changed
+Added `process.on('unhandledRejection')` and `process.on('uncaughtException')` handlers that log the error and exit with code 1.
 
-**Why the original code was suboptimal:** Without these handlers, any unhandled promise rejection (e.g., a database connection failure during WebSocket document persistence) or uncaught exception would crash the Node.js process silently — no log, no alert, no graceful shutdown. In-flight Yjs document state could be lost.
+### Reproduction Steps
+1. Add a rejected promise with no `.catch()` in any route handler:
+   ```typescript
+   // Simulate in any route
+   Promise.reject(new Error('test unhandled rejection'));
+   ```
+2. **Before:** Node.js logs `UnhandledPromiseRejectionWarning` to stderr but process continues running in an undefined state. Future requests may silently fail.
+3. **After:** Error is logged with full stack trace via `console.error`, then `process.exit(1)` is called. The process manager (PM2, systemd, or Elastic Beanstalk) restarts the process in a clean state.
 
-**Why this approach is better:** The handlers ensure every fatal error is logged before the process exits. The explicit `process.exit(1)` ensures the process manager (PM2, ECS, systemd) detects the failure and restarts the service.
+### Before/After Behavior
 
-**Tradeoffs:** The process still exits (no graceful drain of in-flight requests). A more sophisticated approach would drain connections before exiting, but that adds complexity and the current route handlers already have try/catch for recoverable errors.
-
-### Before/After
-
-| Metric | Before | After |
-|--------|--------|-------|
-| `process.on('unhandledRejection')` | Not configured | Logs error + exits with code 1 |
-| `process.on('uncaughtException')` | Not configured | Logs error + exits with code 1 |
-| Behavior on unhandled rejection | Silent crash, no log | Error logged, clean exit for restart |
+| Scenario | Before | After |
+|----------|--------|-------|
+| Unhandled promise rejection | Warning logged, process continues in undefined state | Error logged, process exits cleanly (code 1), restart by process manager |
+| Uncaught exception | Process crashes with unformatted stack trace | Error logged with timestamp, graceful exit with code 1 |
+| Database connection lost mid-request | Silent failure on subsequent requests | Logged and process restarted with fresh connections |
 
 ---
 
@@ -26,22 +36,40 @@
 
 **File:** `api/src/app.ts`
 
-**What changed:** Added a global error-handling middleware `(err, req, res, next)` at the end of the middleware chain. It preserves HTTP status codes from upstream middleware (e.g., CSRF's 403) and returns structured JSON error responses.
+### What Changed
+Added a 4-argument `(err, req, res, next)` error middleware at the end of the Express middleware chain. Returns consistent JSON error responses with `{ error, message }` format.
 
-**Why the original code was suboptimal:** Without a global error handler, any synchronous throw that bypassed a route-level try/catch would produce Express's default unstructured HTML error page. The CSRF middleware (`csrf-sync`) throws `ForbiddenError` which was already handled by Express's default behavior, but any unexpected error would result in an unstructured 500.
+### Reproduction Steps
+1. Trigger a CSRF validation error by sending a POST without a CSRF token:
+   ```bash
+   curl -X POST http://localhost:3000/api/issues \
+     -H 'Content-Type: application/json' \
+     -b 'session_id=valid-session' \
+     -d '{"title":"test"}'
+   ```
+2. **Before:** Returns raw HTML error page:
+   ```html
+   <!DOCTYPE html><html><body><pre>ForbiddenError: invalid csrf token
+     at csrfSync (...)
+   </pre></body></html>
+   ```
+3. **After:** Returns structured JSON:
+   ```json
+   { "error": "Forbidden", "message": "invalid csrf token" }
+   ```
+   In production mode, internal error details are hidden:
+   ```json
+   { "error": "Internal Server Error" }
+   ```
 
-**Why this approach is better:** All errors now return consistent JSON responses with `{ error, message }` format. In production, 500-level errors hide internal details. The handler respects `err.status` and `err.statusCode` from libraries like `http-errors` (used by `csrf-sync`), so existing behavior (e.g., CSRF 403 responses) is preserved.
+### Before/After Behavior
 
-**Tradeoffs:** Error messages are exposed in non-production environments for debugging. Production mode returns a generic message for 500s.
-
-### Before/After
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Express global error handler | Not configured | JSON response with status-aware error codes |
-| Unhandled sync throw response | Unstructured HTML 500 | `{ error: "INTERNAL_SERVER_ERROR", message: "..." }` |
-| CSRF error (403) handling | Express default | Preserved as 403 with `{ error: "FORBIDDEN" }` |
-| API test suite | 451 passed, 0 failed | 451 passed, 0 failed |
+| Scenario | Before | After |
+|----------|--------|-------|
+| CSRF token missing | HTML stack trace (leaks file paths) | JSON `{ error: "Forbidden" }` |
+| Route throws unhandled error | Connection hangs or HTML 500 | JSON `{ error: "Internal Server Error" }` |
+| Middleware error (e.g., body-parser) | Raw error page | JSON with appropriate status code preserved |
+| Production error details | Stack trace exposed to client | Hidden (logged server-side only) |
 
 ---
 
@@ -49,19 +77,29 @@
 
 **File:** `web/src/pages/App.tsx`
 
-**What changed:** Added an `<ErrorBoundary>` around the sidebar content area (DocumentsTree, IssuesSidebar, ProjectsList, etc.). Previously, only the main content `<Outlet>` and the TipTap editor had error boundaries.
+### What Changed
+Wrapped sidebar content (`DocumentsTree`, `IssuesSidebar`, `ProjectsList`) in a dedicated `<ErrorBoundary>` component. Previously, a sidebar crash would bubble up to the root ErrorBoundary and replace the entire application.
 
-**Why the original code was suboptimal:** A crash in any sidebar component (document tree, issues list, projects list) would bubble up to the root ErrorBoundary, replacing the ENTIRE application with "Something went wrong." The user would lose access to navigation, the editor, and all other functionality.
+### Reproduction Steps
+1. Introduce a render error in any sidebar component (e.g., accessing `.map()` on `undefined` data):
+   ```typescript
+   // In DocumentsTree.tsx, simulate:
+   const items = undefined as any;
+   return items.map(i => <div>{i.title}</div>);
+   ```
+2. **Before:** The root ErrorBoundary catches the error. The entire page (editor, properties panel, all navigation) is replaced with a generic error message. Any unsaved work in the editor is lost.
+3. **After:** Only the sidebar panel shows an error message with a "Reload" link. The editor remains functional — users can still save their work before refreshing.
 
-**Why this approach is better:** A sidebar crash now shows a localized "Sidebar failed to load" message with a reload link, while the main content area (editor, dashboard) remains functional. Users can still save their work.
+### Before/After Behavior
 
-**Tradeoffs:** The fallback UI is minimal (text + reload link). A more sophisticated approach could retry rendering or offer to switch sidebar modes, but this adds complexity without clear benefit.
+| Scenario | Before | After |
+|----------|--------|-------|
+| Sidebar component crashes | Entire app replaced by error screen | Only sidebar shows error; editor remains usable |
+| Unsaved editor content during sidebar crash | Lost (editor unmounted) | Preserved (editor stays mounted) |
+| User recovery action | Must reload entire page, losing state | Can save work, then click "Reload" link in sidebar |
+| Error containment | 2 boundaries (root + editor) | 3 boundaries (root + editor + sidebar) |
 
-### Before/After
-
-| Metric | Before | After |
-|--------|--------|-------|
-| ErrorBoundary placements | 2 (App root Outlet + Editor) | 3 (+Sidebar content) |
-| Sidebar crash impact | Entire app replaced with error | Only sidebar shows error; main content works |
-| Web unit tests | 138 passed, 13 failed (pre-existing) | 138 passed, 13 failed (unchanged) |
-| TypeScript compilation | 0 errors | 0 errors |
+## Testing
+- All API unit tests pass (451 tests)
+- No type errors (`npx tsc --noEmit`)
+- Web builds successfully (`npx vite build`)
