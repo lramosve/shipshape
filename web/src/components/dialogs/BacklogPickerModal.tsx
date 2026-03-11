@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useIssuesQuery, useUpdateIssue, getSprintId, getProjectId, getProgramId } from '@/hooks/useIssuesQuery';
 import { Issue } from '@/contexts/IssuesContext';
 import { cn } from '@/lib/cn';
@@ -36,6 +37,7 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { showToast } = useToast();
+  const focusTrapRef = useFocusTrap(isOpen);
 
   // Fetch all issues (no filter)
   const { data: allIssues = [], isLoading } = useIssuesQuery({}, { enabled: isOpen });
@@ -217,13 +219,14 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="backlog-picker-title"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-3xl h-[80vh] flex flex-col rounded-lg bg-background shadow-lg">
+      <div ref={focusTrapRef} className="w-full max-w-3xl h-[80vh] flex flex-col rounded-lg bg-background shadow-lg">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Add to {contextName}</h2>
+            <h2 id="backlog-picker-title" className="text-lg font-semibold text-foreground">Add to {contextName}</h2>
             <p className="text-sm text-muted">Select issues from the backlog to add to this {contextType}</p>
           </div>
           <button
@@ -246,6 +249,7 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
               placeholder="Search issues..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search issues"
               className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>

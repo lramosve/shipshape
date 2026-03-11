@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export interface ConversionDialogProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ export interface ConversionDialogProps {
 }
 
 export function ConversionDialog({ isOpen, onClose, onConvert, sourceType, title, isConverting }: ConversionDialogProps) {
+  const focusTrapRef = useFocusTrap(isOpen);
+
   // Handle Escape key
   useEffect(() => {
     if (!isOpen || isConverting) return;
@@ -35,9 +38,9 @@ export function ConversionDialog({ isOpen, onClose, onConvert, sourceType, title
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" onClick={handleBackdropClick}>
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
-        <h2 className="mb-4 text-lg font-semibold text-foreground">{actionLabel}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="conversion-dialog-title" onClick={handleBackdropClick}>
+      <div ref={focusTrapRef} className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
+        <h2 id="conversion-dialog-title" className="mb-4 text-lg font-semibold text-foreground">{actionLabel}</h2>
         <p className="mb-4 text-sm text-foreground">
           Convert <strong>"{title}"</strong> from {sourceType} to {targetType}?
         </p>

@@ -265,6 +265,7 @@ export function AdminWorkspaceDetailPage() {
                         <select
                           value={member.role}
                           onChange={(e) => handleUpdateRole(member.userId, e.target.value as 'admin' | 'member')}
+                          aria-label={`Role for ${member.name}`}
                           className="px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                         >
                           <option value="admin">Admin</option>
@@ -380,6 +381,7 @@ export function AdminWorkspaceDetailPage() {
                     onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
                     onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                     placeholder="Search by email..."
+                    aria-label="Search users by email"
                     className={cn(
                       "w-full px-3 py-2 bg-background border rounded-md text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent",
                       addUserError ? "border-red-500" : "border-border"
@@ -415,6 +417,7 @@ export function AdminWorkspaceDetailPage() {
             <select
               value={addUserRole}
               onChange={(e) => setAddUserRole(e.target.value as 'admin' | 'member')}
+              aria-label="Role for new user"
               className="px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="member">Member</option>
@@ -444,6 +447,7 @@ export function AdminWorkspaceDetailPage() {
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="email@example.com"
                 required
+                aria-label="Invite email address"
                 className={cn(
                   "flex-1 max-w-sm px-3 py-2 bg-background border rounded-md text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent",
                   inviteError ? "border-red-500" : "border-border"
@@ -452,6 +456,7 @@ export function AdminWorkspaceDetailPage() {
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                aria-label="Role for invited user"
                 className="px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="member">Member</option>
@@ -482,6 +487,7 @@ export function AdminWorkspaceDetailPage() {
                     value={inviteSubjectDn}
                     onChange={(e) => setInviteSubjectDn(e.target.value)}
                     placeholder="X.509 Subject DN (e.g., CN=LASTNAME.FIRSTNAME.MIDDLE.1234567890)"
+                    aria-label="PIV X.509 Subject DN"
                     className="w-full max-w-lg px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent font-mono"
                   />
                   <p className="mt-1 text-xs text-muted">

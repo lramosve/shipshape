@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { apiGet, apiPost } from '@/lib/api';
 import { usePrograms } from '@/hooks/useProgramsQuery';
 import { useToast } from '@/components/ui/Toast';
@@ -27,6 +28,7 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
   const [isMerging, setIsMerging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const focusTrapRef = useFocusTrap(isOpen);
   const { programs } = usePrograms();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -139,10 +141,11 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="merge-dialog-title"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
-        <h2 className="mb-1 text-lg font-semibold text-foreground">Merge Program</h2>
+      <div ref={focusTrapRef} className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
+        <h2 id="merge-dialog-title" className="mb-1 text-lg font-semibold text-foreground">Merge Program</h2>
         <p className="mb-4 text-sm text-muted">
           Move all content from <strong>{sourceName}</strong> into another program.
         </p>
