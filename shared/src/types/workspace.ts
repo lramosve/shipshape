@@ -41,7 +41,7 @@ export interface AuditLog {
   action: string;
   resourceType: string | null;
   resourceId: string | null;
-  details: Record<string, unknown> | null;
+  readonly details: Readonly<Record<string, unknown>> | null;
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: Date;

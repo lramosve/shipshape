@@ -86,5 +86,9 @@ export function ReviewQueueProvider({ children }: { children: React.ReactNode })
 }
 
 export function useReviewQueue() {
-  return useContext(ReviewQueueContext);
+  const context = useContext(ReviewQueueContext);
+  if (!context) {
+    throw new Error('useReviewQueue must be used within ReviewQueueProvider');
+  }
+  return context;
 }

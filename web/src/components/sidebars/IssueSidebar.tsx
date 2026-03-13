@@ -124,7 +124,7 @@ export function IssueSidebar({
   const [cascadeWarning, setCascadeWarning] = useState<{
     open: boolean;
     pendingState: string | null;
-    incompleteChildren: IncompleteChild[];
+    incompleteChildren: readonly IncompleteChild[];
   }>({ open: false, pendingState: null, incompleteChildren: [] });
 
   // Get current associations from issue - memoize to prevent infinite re-renders

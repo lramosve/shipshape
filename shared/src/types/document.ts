@@ -26,7 +26,7 @@ export interface IncompleteChild {
 export interface CascadeWarning {
   error: 'incomplete_children';
   message: string;
-  incomplete_children: IncompleteChild[];
+  readonly incomplete_children: readonly IncompleteChild[];
   confirm_action: string;
 }
 
@@ -94,8 +94,8 @@ export interface ProgramProperties {
   // RACI accountability fields
   owner_id?: string | null;        // R - Responsible (does the work)
   accountable_id?: string | null;  // A - Accountable (approver for hypotheses/reviews)
-  consulted_ids?: string[];        // C - Consulted (provide input, stubbed for now)
-  informed_ids?: string[];         // I - Informed (kept in loop, stubbed for now)
+  readonly consulted_ids?: readonly string[];        // C - Consulted (provide input, stubbed for now)
+  readonly informed_ids?: readonly string[];         // I - Informed (kept in loop, stubbed for now)
   [key: string]: unknown;
 }
 
@@ -110,8 +110,8 @@ export interface ProjectProperties {
   // RACI accountability fields
   owner_id?: string | null;        // R - Responsible (does the work)
   accountable_id?: string | null;  // A - Accountable (approver for hypotheses/reviews)
-  consulted_ids?: string[];        // C - Consulted (provide input, stubbed for now)
-  informed_ids?: string[];         // I - Informed (kept in loop, stubbed for now)
+  readonly consulted_ids?: readonly string[];        // C - Consulted (provide input, stubbed for now)
+  readonly informed_ids?: readonly string[];         // I - Informed (kept in loop, stubbed for now)
   // Visual identification
   color: string;
   emoji?: string | null;
@@ -119,7 +119,7 @@ export interface ProjectProperties {
   plan_validated?: boolean | null;  // null = not yet determined, true = validated, false = invalidated
   monetary_impact_expected?: string | null;  // Expected monetary value (e.g., "$50K annual savings")
   monetary_impact_actual?: string | null;    // Actual monetary impact after completion
-  success_criteria?: string[] | null;        // Array of measurable success criteria
+  readonly success_criteria?: readonly string[] | null;        // Array of measurable success criteria
   next_steps?: string | null;                // Recommended follow-up actions
   // Approval tracking for accountability workflow
   plan_approval?: ApprovalTracking | null;  // Approval status for project plan
@@ -157,9 +157,9 @@ export interface WeekProperties {
   status?: 'planning' | 'active' | 'completed';  // Sprint workflow status (default: 'planning')
   // Plan tracking (for Ship-Claude integration)
   plan?: string | null;           // Current plan statement
-  success_criteria?: string[] | null;   // Array of measurable success criteria
+  readonly success_criteria?: readonly string[] | null;   // Array of measurable success criteria
   confidence?: number | null;           // Confidence level 0-100
-  plan_history?: PlanHistoryEntry[] | null;  // History of plan changes
+  readonly plan_history?: readonly PlanHistoryEntry[] | null;  // History of plan changes
   // Approval tracking for accountability workflow
   plan_approval?: ApprovalTracking | null;  // Approval status for sprint plan
   review_approval?: ApprovalTracking | null;      // Approval status for sprint review
