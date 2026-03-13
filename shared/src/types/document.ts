@@ -234,9 +234,9 @@ export type DocumentProperties =
 
 // Base document interface
 export interface Document {
-  id: string;
-  workspace_id: string;
-  document_type: DocumentType;
+  readonly id: string;
+  readonly workspace_id: string;
+  readonly document_type: DocumentType;
   title: string;
   content: Record<string, unknown>;
   yjs_state?: Uint8Array | null;
@@ -245,11 +245,11 @@ export interface Document {
   // Note: program_id, project_id, and sprint_id removed - use belongs_to array instead
   // These columns were dropped by migrations 027 and 029
   properties: Record<string, unknown>;
-  ticket_number?: number | null;
+  readonly ticket_number?: number | null;
   archived_at?: Date | null;
-  created_at: Date;
+  readonly created_at: Date;
   updated_at: Date;
-  created_by?: string | null;
+  readonly created_by?: string | null;
   // Document visibility (private = creator only, workspace = all members)
   visibility: DocumentVisibility;
   // Status timestamps (primarily for issues)

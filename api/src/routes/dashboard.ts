@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db/client.js';
+import { queryOne } from '../db/query-helpers.js';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { computeICEScore } from '@ship/shared';
@@ -48,17 +49,17 @@ router.get('/my-work', authMiddleware, async (req: Request, res: Response) => {
     const { isAdmin } = await getVisibilityContext(userId, workspaceId);
 
     // Get workspace sprint configuration to calculate current sprint number
-    const workspaceResult = await pool.query(
+    const workspace = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    if (workspaceResult.rows.length === 0) {
+    if (!workspace) {
       res.status(404).json({ error: 'Workspace not found' });
       return;
     }
 
-    const rawStartDate = workspaceResult.rows[0].sprint_start_date;
+    const rawStartDate = workspace.sprint_start_date;
     const sprintDuration = 7; // 7-day sprints
 
     // Calculate the current sprint number
@@ -321,7 +322,7 @@ router.get('/my-focus', authMiddleware, async (req: Request, res: Response) => {
     const workspaceId = req.workspaceId!;
 
     // 1. Look up the user's person document
-    const personResult = await pool.query(
+    const person = await queryOne<{ id: string; title: string }>(
       `SELECT id, title FROM documents
        WHERE workspace_id = $1 AND document_type = 'person'
          AND (properties->>'user_id') = $2
@@ -329,25 +330,25 @@ router.get('/my-focus', authMiddleware, async (req: Request, res: Response) => {
       [workspaceId, userId]
     );
 
-    if (personResult.rows.length === 0) {
+    if (!person) {
       res.status(404).json({ error: 'Person not found for current user' });
       return;
     }
 
-    const personId = personResult.rows[0].id;
+    const personId = person.id;
 
     // 2. Get workspace sprint configuration
-    const workspaceResult = await pool.query(
+    const workspace2 = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    if (workspaceResult.rows.length === 0) {
+    if (!workspace2) {
       res.status(404).json({ error: 'Workspace not found' });
       return;
     }
 
-    const rawStartDate = workspaceResult.rows[0].sprint_start_date;
+    const rawStartDate = workspace2.sprint_start_date;
     const sprintDuration = 7;
 
     let workspaceStartDate: Date;
@@ -501,7 +502,7 @@ router.get('/my-week', authMiddleware, async (req: Request, res: Response) => {
     const workspaceId = req.workspaceId!;
 
     // 1. Look up the user's person document
-    const personResult = await pool.query(
+    const person = await queryOne<{ id: string; title: string }>(
       `SELECT id, title FROM documents
        WHERE workspace_id = $1 AND document_type = 'person'
          AND (properties->>'user_id') = $2
@@ -509,26 +510,26 @@ router.get('/my-week', authMiddleware, async (req: Request, res: Response) => {
       [workspaceId, userId]
     );
 
-    if (personResult.rows.length === 0) {
+    if (!person) {
       res.status(404).json({ error: 'Person not found for current user' });
       return;
     }
 
-    const personId = personResult.rows[0].id;
-    const personName = personResult.rows[0].title;
+    const personId = person.id;
+    const personName = person.title;
 
     // 2. Get workspace sprint configuration
-    const workspaceResult = await pool.query(
+    const workspace3 = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    if (workspaceResult.rows.length === 0) {
+    if (!workspace3) {
       res.status(404).json({ error: 'Workspace not found' });
       return;
     }
 
-    const rawStartDate = workspaceResult.rows[0].sprint_start_date;
+    const rawStartDate = workspace3.sprint_start_date;
     const sprintDuration = 7;
 
     let workspaceStartDate: Date;

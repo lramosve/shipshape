@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db/client.js';
+import { queryOne } from '../db/query-helpers.js';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { TEMPLATE_HEADINGS, extractText, hasContent } from '../utils/document-content.js';
@@ -45,12 +46,12 @@ router.get('/grid', authMiddleware, async (req: Request, res: Response) => {
     );
 
     // Get workspace sprint start date
-    const workspaceResult = await pool.query(
+    const workspaceRow = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    const rawSprintStartDate = workspaceResult.rows[0]?.sprint_start_date;
+    const rawSprintStartDate = workspaceRow?.sprint_start_date;
     const sprintDurationDays = 7; // 1-week sprints
 
     const today = new Date();
@@ -783,12 +784,12 @@ router.get('/accountability', authMiddleware, async (req: Request, res: Response
     }
 
     // Get workspace sprint start date
-    const workspaceResult = await pool.query(
+    const workspaceRow = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    const rawSprintStartDate = workspaceResult.rows[0]?.sprint_start_date;
+    const rawSprintStartDate = workspaceRow?.sprint_start_date;
     const sprintDurationDays = 7; // 1-week sprints
     const today = new Date();
 
@@ -971,12 +972,12 @@ router.get('/people/:personId/sprint-metrics', authMiddleware, async (req: Reque
     }
 
     // Get workspace sprint start date
-    const workspaceResult = await pool.query(
+    const workspaceRow = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    const rawSprintStartDate = workspaceResult.rows[0]?.sprint_start_date;
+    const rawSprintStartDate = workspaceRow?.sprint_start_date;
     const sprintDurationDays = 7; // 1-week sprints
     const today = new Date();
 
@@ -2020,12 +2021,12 @@ router.get('/accountability-grid', authMiddleware, async (req: Request, res: Res
     }
 
     // Get workspace sprint start date
-    const workspaceResult = await pool.query(
+    const workspaceRow = await queryOne<{ sprint_start_date: Date | string }>(
       `SELECT sprint_start_date FROM workspaces WHERE id = $1`,
       [workspaceId]
     );
 
-    const rawSprintStartDate = workspaceResult.rows[0]?.sprint_start_date;
+    const rawSprintStartDate = workspaceRow?.sprint_start_date;
     const sprintDurationDays = 7;
     const today = new Date();
 

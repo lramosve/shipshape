@@ -75,11 +75,13 @@ export async function logDocumentChange(
  * const updates = getTimestampUpdates('triage', 'in_progress');
  * // Returns: { started_at: 'COALESCE(started_at, NOW())' }
  */
+type TimestampColumn = 'started_at' | 'completed_at' | 'cancelled_at' | 'reopened_at';
+
 export function getTimestampUpdates(
   oldState: string | null,
   newState: string
-): Record<string, string> {
-  const updates: Record<string, string> = {};
+): Partial<Record<TimestampColumn, string>> {
+  const updates: Partial<Record<TimestampColumn, string>> = {};
 
   if (newState === 'in_progress' && oldState !== 'in_progress') {
     if (oldState === 'done' || oldState === 'cancelled') {
